@@ -104,10 +104,6 @@ public:
 	 */
 	//virtual bool SDK_OnMetamodPauseChange(bool paused, char *error, size_t maxlength);
 #endif
-
-private:
-	bool Hook_LevelInitPost(const char *pMapName, char const *pMapEntities,
-		char const *pOldLevel, char const *pLandmarkName, bool loadGame, bool background);
 };
 
 #endif //_INCLUDE_SOURCEMOD_EXTENSION_PROPER_H_
