@@ -13,16 +13,13 @@
 
 #include <map>
 
+static KHook::Virtual<IServerGameDLL, bool, const char *, const char *, const char *, const char *, bool, bool> g_LevelInitHook(&IServerGameDLL::LevelInit, nullptr, &DynSchema::Hook_LevelInitPost);
+
 DynSchema g_Plugin;
 
 SMEXT_LINK(&g_Plugin);
 
-static KHook::Return<bool> Hook_LevelInitPost(IServerGameDLL *pThis, char const *pMapName, char const *pMapEntities,char const *pOldLevel, char const *pLandmarkName, bool loadGame, bool background);
-
-static KHook::Virtual<IServerGameDLL, bool, char const *, char const *, char const *, char const *, bool, bool> g_LevelInitHook(&IServerGameDLL::LevelInit, nullptr, Hook_LevelInitPost);
-
-bool DynSchema::SDK_OnLoad(char *error, size_t maxlen, bool late)
-{
+bool DynSchema::SDK_OnLoad(char *error, size_t maxlen, bool late) {
 	g_LevelInitHook.Add(gamedll);
 
 	sharesys->AddNatives(myself, g_EconAttributeNatives);
@@ -42,7 +39,7 @@ void DynSchema::SDK_OnUnload() {
 	g_pHandleSys->RemoveType(g_EconInjectedAttributeType, myself->GetIdentity());
 }
 
-static KHook::Return<bool> Hook_LevelInitPost(IServerGameDLL *pThis, char const *pMapName, char const *pMapEntities, char const *pOldLevel, char const *pLandmarkName, bool loadGame, bool background) {
+KHook::Return<bool> DynSchema::Hook_LevelInitPost(IServerGameDLL *pThis, const char *pMapName, const char *pMapEntities, const char *pOldLevel, const char *pLandmarkName, bool loadGame, bool background) {
 	// reinstall attributes as needed
 	g_EconManager.InstallAttributes();
 

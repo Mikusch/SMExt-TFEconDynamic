@@ -104,6 +104,10 @@ public:
 	 */
 	//virtual bool SDK_OnMetamodPauseChange(bool paused, char *error, size_t maxlength);
 #endif
+
+private:
+	static KHook::Return<bool> Hook_LevelInitPost(IServerGameDLL *pThis, const char *pMapName, const char *pMapEntities,
+		const char *pOldLevel, const char *pLandmarkName, bool loadGame, bool background);
 };
 
 #endif //_INCLUDE_SOURCEMOD_EXTENSION_PROPER_H_
