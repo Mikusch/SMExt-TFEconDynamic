@@ -105,7 +105,7 @@ public:
 	//virtual bool SDK_OnMetamodPauseChange(bool paused, char *error, size_t maxlength);
 #endif
 
-private:
+public:
 	static KHook::Return<bool> Hook_LevelInitPost(IServerGameDLL *pThis, const char *pMapName, const char *pMapEntities,
 		const char *pOldLevel, const char *pLandmarkName, bool loadGame, bool background);
 };
