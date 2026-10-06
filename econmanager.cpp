@@ -6,8 +6,13 @@
 
 #ifdef PLATFORM_64BITS
 	#define OFFS_M_ATTRIBUTES 0x250
+	// TF2 11087207 added a secondary name -> m_mapAttributes element index lookup
+	// table to CEconItemSchema; GetAttributeDefinitionByName() now consults it
+	// exclusively instead of iterating the map.
+	#define OFFS_M_ATTRIBUTE_NAME_INDEX 0x280
 #else
 	#define OFFS_M_ATTRIBUTES 0x1BC
+	#define OFFS_M_ATTRIBUTE_NAME_INDEX 0x1E0
 #endif
 
 CEconManager g_EconManager;
@@ -15,6 +20,10 @@ CEconManager g_EconManager;
 // pointer to item schema attribute map singleton
 using AttributeMap = CUtlMap<int, CEconItemAttributeDefinition, int>;
 AttributeMap *g_SchemaAttributes;
+
+// pointer to the schema's name -> attribute map element index lookup table
+using AttributeNameMap = CUtlMap<const char *, int, int>;
+AttributeNameMap *g_SchemaAttributeNameIndex;
 
 size_t g_nAutoAttributeBase = 4000;
 std::map<std::string, int> g_AutoNumberedAttributes{};
@@ -50,6 +59,7 @@ bool CEconManager::Init(char *error, size_t maxlength) {
 	
 	// is this late enough in the MM:S load stage?  we might just have to hold the function
 	g_SchemaAttributes = reinterpret_cast<AttributeMap*>(fnGetEconItemSchema() + OFFS_M_ATTRIBUTES);
+	g_SchemaAttributeNameIndex = reinterpret_cast<AttributeNameMap*>(fnGetEconItemSchema() + OFFS_M_ATTRIBUTE_NAME_INDEX);
 	return true;
 }
 
@@ -108,7 +118,17 @@ bool CEconManager::InsertOrReplaceAttribute(KeyValues *pAttribKV) {
 	fnItemAttributeInitFromKV(&def, attribute, nullptr);
 	
 	// TODO verify that this doesn't leak, or just shrug it off
-	g_SchemaAttributes->InsertOrReplace(attrdef, def);
+	auto insertedIndex = g_SchemaAttributes->InsertOrReplace(attrdef, def);
+	
+	// Since TF2 11087207, name-based schema lookups consult a secondary map that
+	// is built alongside m_mapAttributes.  Register the injected attribute there so
+	// plugins that resolve attributes by name (e.g. tf2attributes) can find it.
+	if (insertedIndex != g_SchemaAttributes->InvalidIndex()) {
+		const char *pszDefinitionName = g_SchemaAttributes->Element(insertedIndex).m_pszName;
+		if (pszDefinitionName) {
+			g_SchemaAttributeNameIndex->InsertOrReplace(pszDefinitionName, insertedIndex);
+		}
+	}
 	return true;
 }
 
